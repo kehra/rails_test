@@ -1,0 +1,12 @@
+<h1>TeamHub Notification</h1>
+
+<p><%= @message %></p>
+
+<ul>
+  <li><strong>Task:</strong> <%= @task&.title || "(unknown)" %></li>
+  <li><strong>Project:</strong> <%= @project&.name || "(unknown)" %></li>
+</ul>
+
+<% if @task %>
+  <p><%= link_to "Open task", task_url(@task) %></p>
+<% end %>

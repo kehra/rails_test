@@ -1,0 +1,117 @@
+<% provide :title, "Dashboard" %>
+<% content_for :head do %>
+  <meta name="teamhub-dashboard" content="primary">
+<% end %>
+<% content_for :head do %>
+  <meta name="teamhub-dashboard-extra" content="secondary">
+<% end %>
+
+<h1><%= t("ui.dashboard") %></h1>
+
+<p>Signed in as <strong><%= Current.user.name %></strong> (<%= Current.user.email %>)</p>
+
+<%= turbo_stream_from Current.user %>
+<%= turbo_stream_from [Current.user, :notifications] %>
+
+<section data-controller="hello"
+         data-hello-name-value="TeamHub"
+         data-hello-state-class="is-active"
+         data-hello-suffix-param="clicked"
+         data-hello-status-outlet=".status-probe"
+         data-action="click->hello#greet:open:prevent keydown.enter->hello#greet resize@window->hello#sync teamhub:refresh@document->hello#sync hello:ready->hello#greet:open">
+  <p data-hello-target="output">Stimulus ready</p>
+  <div class="status-probe"
+       data-controller="status"
+       data-status-state-value="ready">
+    Status ready
+  </div>
+</section>
+
+<section>
+  <% cache [ "dashboard-stats", Current.user, @stats ] do %>
+    <h2>Stats</h2>
+    <ul>
+      <li>Organizations: <%= @stats[:organizations_count] %></li>
+      <li>Projects: <%= number_with_delimiter(@stats[:projects_count]) %></li>
+      <li>Tasks: <%= number_with_delimiter(@stats[:tasks_count]) %></li>
+      <li>Unread notifications: <%= @stats[:unread_notifications_count] %></li>
+      <li>Rendered at: <%= l(Time.current, format: :short) %></li>
+    </ul>
+  <% end %>
+</section>
+
+<section>
+  <h2>Search Filters</h2>
+  <%= form_with scope: :filters, url: dashboard_path, method: :get do |form| %>
+    <%= form.label :q, "Query" %>
+    <%= form.text_field :q %>
+    <%= form.submit "Apply" %>
+  <% end %>
+
+  <%= form_with url: docs_preview_path, method: :get do |form| %>
+    <%= form.label :source, "Preview source" %>
+    <%= form.text_field :source %>
+    <%= form.submit "Preview" %>
+  <% end %>
+</section>
+
+<section>
+  <h2><%= t("ui.notifications") %></h2>
+  <p id="notifications_live_events"></p>
+  <div id="notifications">
+    <% cache [ "dashboard-notifications", Current.user, @notifications.maximum(:updated_at)&.to_i || 0 ] do %>
+      <%= render @notifications %>
+    <% end %>
+  </div>
+</section>
+
+<section>
+  <h2>Your Organizations</h2>
+  <% if @organizations.any? %>
+    <ul>
+      <% @organizations.each do |organization| %>
+        <li><%= link_to organization.name, organization %></li>
+      <% end %>
+    </ul>
+  <% else %>
+    <p>No organizations yet.</p>
+  <% end %>
+  <%= link_to "New organization", new_organization_path %>
+</section>
+
+<section>
+  <h2>Recent Projects</h2>
+  <% cache [ "dashboard-projects", Current.user, @projects.maximum(:updated_at)&.to_i || 0 ] do %>
+    <% if @projects.any? %>
+      <ul>
+        <% @projects.each do |project| %>
+          <li>
+            <%= link_to project.name, project %>
+            (<%= project.organization.name %>)
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p>No projects yet.</p>
+    <% end %>
+  <% end %>
+</section>
+
+<section>
+  <h2>Recent Tasks</h2>
+  <% cache [ "dashboard-tasks", Current.user, @tasks.maximum(:updated_at)&.to_i || 0 ] do %>
+    <% if @tasks.any? %>
+      <ul>
+        <% @tasks.each do |task| %>
+          <li>
+            <%= link_to task.title, task %>
+            - <%= task.status.humanize %>
+            - project: <%= task.project.name %>
+          </li>
+        <% end %>
+      </ul>
+    <% else %>
+      <p>No tasks yet.</p>
+    <% end %>
+  <% end %>
+</section>

@@ -1,0 +1,76 @@
+<%= form_with(model: task) do |form| %>
+  <% if task.errors.any? %>
+    <div style="color: red">
+      <h2><%= pluralize(task.errors.count, "error") %> prohibited this task from being saved:</h2>
+
+      <ul>
+        <% task.errors.each do |error| %>
+          <li><%= error.full_message %></li>
+        <% end %>
+      </ul>
+    </div>
+  <% end %>
+
+  <div>
+    <%= form.label :project_id, style: "display: block" %>
+    <%= form.collection_select :project_id, Project.joins(:organization).where(organizations: { id: Current.user.organization_ids }).order(:name), :id, :name, prompt: "Select project" %>
+  </div>
+
+  <div>
+    <%= form.label :assignee_id, style: "display: block" %>
+    <%= form.collection_select :assignee_id, User.joins(:memberships).where(memberships: { organization_id: Current.user.organization_ids }).distinct.order(:name), :id, :name, include_blank: true %>
+  </div>
+
+  <div>
+    <%= form.label :title, style: "display: block" %>
+    <%= form.text_field :title %>
+  </div>
+
+  <div>
+    <%= form.label :description, style: "display: block" %>
+    <%= form.textarea :description %>
+  </div>
+
+  <div>
+    <%= form.label :status, style: "display: block" %>
+    <%= form.select :status, Task.statuses.keys.map { |status| [status.humanize, status] } %>
+  </div>
+
+  <div>
+    <%= form.label :priority, style: "display: block" %>
+    <%= form.select :priority, Task.priorities.keys.map { |priority| [priority.humanize, priority] } %>
+  </div>
+
+  <div>
+    <%= form.label :due_on, style: "display: block" %>
+    <%= form.date_field :due_on %>
+  </div>
+
+  <div>
+    <%= form.label :content, "Rich content", style: "display: block" %>
+    <%= form.rich_textarea :content %>
+  </div>
+
+  <fieldset>
+    <legend>Tags</legend>
+    <% existing = task.task_tags.to_a %>
+    <% tag_forms = existing.presence || [ TaskTag.new ] %>
+    <%= form.fields_for :task_tags, tag_forms do |tag_form| %>
+      <div>
+        <%= tag_form.label :name, "Tag", style: "display: block" %>
+        <%= tag_form.text_field :name %>
+      </div>
+    <% end %>
+  </fieldset>
+
+  <div data-controller="direct-upload"
+       data-action="direct-upload:start->direct-upload#start direct-upload:error->direct-upload#error direct-upload:end->direct-upload#end">
+    <%= form.label :files, "Attachments", style: "display: block" %>
+    <%= form.file_field :files, multiple: true, direct_upload: true %>
+    <p data-direct-upload-target="status">No uploads yet</p>
+  </div>
+
+  <div>
+    <%= form.submit %>
+  </div>
+<% end %>

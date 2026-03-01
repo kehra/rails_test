@@ -1,0 +1,12 @@
+en:
+  hello: "Hello world"
+  advanced_mailer:
+    digest_report:
+      subject: "[%{app}] TeamHub digest"
+  time:
+    formats:
+      short: "%Y-%m-%d %H:%M"
+  ui:
+    dashboard: "TeamHub Dashboard"
+    locale: "Locale"
+    notifications: "Notifications"

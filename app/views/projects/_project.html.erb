@@ -1,0 +1,23 @@
+<% cache project do %>
+  <div id="<%= dom_id project %>">
+    <div>
+      <strong>Organization:</strong>
+      <%= project.organization.name %>
+    </div>
+
+    <div>
+      <strong>Name:</strong>
+      <%= project.name %>
+    </div>
+
+    <div>
+      <strong>Description:</strong>
+      <%= project.description %>
+    </div>
+
+    <div>
+      <strong>Status:</strong>
+      <%= project.status.humanize %>
+    </div>
+  </div>
+<% end %>

@@ -1,0 +1,64 @@
+<% cache task do %>
+  <div id="<%= dom_id task %>">
+    <div>
+      <strong>Project:</strong>
+      <%= task.project.name %>
+    </div>
+
+    <div>
+      <strong>Assignee:</strong>
+      <%= task.assignee&.name || "-" %>
+    </div>
+
+    <div>
+      <strong>Title:</strong>
+      <%= task.title %>
+    </div>
+
+    <div>
+      <strong>Description:</strong>
+      <%= sanitize(task.description.to_s) %>
+    </div>
+
+    <div>
+      <strong>Status:</strong>
+      <%= task.status.humanize %>
+    </div>
+
+    <div>
+      <strong>Priority:</strong>
+      <%= task.priority.humanize %>
+    </div>
+
+    <div>
+      <strong>Due on:</strong>
+      <%= task.due_on %>
+    </div>
+
+    <div>
+      <% if task.content.present? %>
+        <strong>Rich content:</strong>
+        <%= task.content %>
+      <% end %>
+    </div>
+
+    <% if task.files.attached? %>
+      <div>
+        <strong>Attachments:</strong>
+        <ul>
+          <% task.files.each do |file| %>
+            <li>
+              <%= link_to file.filename.to_s, rails_blob_path(file, disposition: "attachment") %>
+              <%= button_to "Purge", purge_file_task_path(task, signed_id: file.blob.signed_id), method: :delete, form: { style: "display:inline" } %>
+              <%= button_to "Purge later", purge_file_later_task_path(task, signed_id: file.blob.signed_id), method: :delete, form: { style: "display:inline" } %>
+              <% if file.variable? %>
+                <div><%= image_tag file.variant(resize_to_limit: [320, 320]) %></div>
+              <% end %>
+            </li>
+          <% end %>
+        </ul>
+      </div>
+    <% end %>
+
+  </div>
+<% end %>

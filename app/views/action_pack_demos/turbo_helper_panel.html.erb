@@ -1,0 +1,22 @@
+<h1>Turbo Helper Panel</h1>
+
+<% turbo_refreshes_with method: :morph, scroll: :preserve %>
+
+<%= turbo_frame_tag "demo_frame",
+  src: docs_preview_path,
+  loading: :lazy,
+  target: "_top",
+  autoscroll: true,
+  recurse: "demo_child" do %>
+  <p id="turbo-frame-content">Frame content</p>
+  <%= turbo_frame_tag "demo_child" do %>
+    <p id="turbo-frame-child">Nested frame</p>
+  <% end %>
+<% end %>
+
+<%= link_to "Turbo Delete", docs_preview_path,
+  data: {
+    turbo_method: :delete,
+    turbo_confirm: "Are you sure?",
+    turbo_frame: "demo_frame"
+  } %>

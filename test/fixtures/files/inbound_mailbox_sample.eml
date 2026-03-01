@@ -1,0 +1,8 @@
+From: Fixture Sender <fixture-sender@example.test>
+To: workflow@example.test
+Subject: Fixture Subject
+Message-ID: <fixture-mailbox@example.test>
+MIME-Version: 1.0
+Content-Type: text/plain; charset=UTF-8
+
+Fixture body from eml helper.

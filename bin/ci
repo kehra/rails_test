@@ -1,0 +1,4 @@
+#!/usr/bin/env ruby
+ENV["RAILS_ENV"] = "test"
+require_relative "../config/ci"
+exec("bundle", "exec", "rails", "test")

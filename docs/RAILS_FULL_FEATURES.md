@@ -1,0 +1,666 @@
+# Rails全機能統合台帳 (TeamHub)
+
+このドキュメントは、以下を1つに統合して管理する。
+- 全機能の洗い出し
+- 実装ステータス
+- 実装証跡 (コード/テスト/コマンド)
+
+重要:
+- 本書は `FULL_FEATURES` の名に合わせ、実装済みだけでなく未実装も同粒度で列挙して管理する。
+- 「実装済み」は TeamHub で実装し、証跡を確認できることを意味する。
+- 「一部実装」は Rails API 自体の制約、または TeamHub の方針上、完全同型の利用パターンが取れないものを意味する。
+
+## 1. スコープ
+- 対象: Ruby on Rails 本体の全機能
+- 対象外: 外部プロバイダーのバリエーション
+- 例: S3/GCS/Azure, Sidekiq/Resque, 外部SMTP/API配送, 外部Cable基盤
+
+ステータス定義:
+- `実装済み`: TeamHub で実装し、証跡あり
+- `一部実装`: Rails API 制約または方針上、代表的な範囲まで実装
+- `未実装`: TeamHub で未実装
+- `対象外`: 方針により除外
+
+## 2. 環境固定
+- Ruby: `4.0.0` (mise)
+- Rails: `8.1.2`
+- DB: `SQLite`
+- Active Job: `SolidQueue`
+- Active Storage: `Local`
+- Frontend: `Hotwire (Turbo + Stimulus + importmap)`
+
+## 3. コンポーネント別台帳
+
+### 3.1 Core Platform (Railties / App基盤 / Configuration / Tooling)
+- アプリ生成 (`rails new`): 実装済み
+- API-only app mode (`config.api_only`): 実装済み
+- ジェネレータ (`rails g model/controller/job/channel/...`): 実装済み
+- custom generator 定義: 実装済み
+- マイグレーション管理 (`db:migrate/rollback/schema:load`): 実装済み
+- `rails about` / `rails notes` / `rails routes` runbook化: 実装済み
+- `rails db:*` サブコマンドの網羅検証: 実装済み
+- generator options (`--api`, `--skip-*`) 検証: 実装済み
+- コマンド実行 (`rails runner`, `rails console`): 実装済み
+- 初期化順序 (`config.before_initialize` / `after_initialize`): 実装済み
+- 初期化子/環境設定 (`config/environments/*`, `config/initializers/*`): 実装済み
+- environment別 config override 検証: 実装済み
+- credentials API (`Rails.application.credentials`): 実装済み
+- Zeitwerk 再読込/定数解決: 実装済み
+- `Rails::Railtie`: 実装済み
+- `Rails::Engine`: 実装済み
+- `config.to_prepare` / reloader hooks: 実装済み
+- カスタムRakeタスク (`lib/tasks/*.rake`): 実装済み
+- Railtie CLI hooks (`console` / `runner` / `server` blocks): 実装済み
+- Railtie generator hooks (`generators` block / `config.generators` customization in app code): 実装済み
+- Application generator defaults (`config.app_generators`): 実装済み
+- Railties load order control (`config.railties_order`): 実装済み
+- Custom exception app wiring (`config.exceptions_app`): 実装済み
+- File watcher customization (`config.watchable_dirs` / `config.watchable_files`): 実装済み
+- Engine route mutation helpers (`routes.append` / `routes.prepend`): 実装済み
+- Engine namespace discovery APIs (`Rails::Engine.find` / `find_root`): 実装済み
+- 証跡:
+  - `config/application.rb`
+  - `config/environments/*`
+  - `config/initializers/*`
+  - `config/environments/api_only.rb`
+  - `app/services/credentials_probe.rb`
+  - `test/models/configuration_and_zeitwerk_test.rb`
+  - `lib/teamhub/public_api_railtie.rb`
+  - `lib/teamhub/sample_engine.rb`
+  - `lib/teamhub/sample_engine/config/routes.rb`
+  - `lib/teamhub/sample_engine/config/locales/en.yml`
+  - `lib/teamhub/sample_engine/app/assets/stylesheets/teamhub/sample_engine.css`
+  - `lib/generators/teamhub/feature/feature_generator.rb`
+  - `lib/generators/teamhub/feature/templates/feature_initializer.rb.tt`
+  - `lib/tasks/teamhub.rake`
+  - `docs/RUNBOOK.md`
+  - `test/models/public_api_railtie_test.rb`
+  - `test/models/sharding_and_engine_test.rb`
+  - `test/models/custom_generator_test.rb`
+  - `test/integration/public_api_features_test.rb`
+
+### 3.2 Active Support / Active Model
+- Concern/モジュール構成: 実装済み
+- Core Extensions (Time/Hash/String等): 実装済み
+- `ActiveSupport::Callbacks`: 実装済み
+- `ActiveSupport::Notifications` 複数イベント運用: 実装済み
+- `ActiveSupport::CurrentAttributes` reset/isolation: 実装済み
+- `ActiveSupport::Executor` / `ExecutionContext`: 実装済み
+- `ActiveSupport::Rescuable` の独自クラス運用: 実装済み
+- Time helper (`travel_to`, `freeze_time` など): 実装済み
+- Cache API (`Rails.cache.fetch`): 実装済み
+- Time Zone (`config.time_zone`, `Time.current`): 実装済み
+- MessageVerifier / MessageEncryptor: 実装済み
+- Parameter filtering (`filter_parameters`): 実装済み
+- Hash/Object transformation helpers (`deep_transform_keys` / `deep_symbolize_keys` / `compact_blank` / `with_indifferent_access`): 実装済み
+- `delegate_missing_to`: 実装済み
+- `with_options`: 実装済み
+- `StringInquirer`: 実装済み
+- Lazy-load hooks (`ActiveSupport.on_load`): 実装済み
+- Descendants tracking (`Class#descendants` / `subclasses`): 実装済み
+- Deprecation API (`ActiveSupport::Deprecation` / app deprecators): 実装済み
+- `ActiveSupport::BroadcastLogger`: 実装済み
+- `ActiveModel::Model` + validations: 実装済み
+- `ActiveModel::Attributes`: 実装済み
+- `ActiveModel::Type` カスタム型: 実装済み
+- Errors API (`errors.add`, `full_messages`): 実装済み
+- Naming / Conversion (`to_model`, `model_name`): 実装済み
+- `has_secure_password` (bcrypt): 実装済み
+- `ActiveModel::Dirty`: 実装済み
+- `ActiveModel::Callbacks` (`define_model_callbacks`): 実装済み
+- `ActiveModel::Validations::Callbacks` (`before_validation` / `after_validation` on plain models): 実装済み
+- Active Model serialization (`ActiveModel::Serialization` / `ActiveModel::Serializers::JSON`): 実装済み
+- Normalization (`normalizes`): 実装済み
+- Validation helpers (`acceptance` / `confirmation` / `length` / `format` / `inclusion` / `exclusion` / `absence`): 実装済み
+- Custom validators (`validates_each` / `validates_with`): 実装済み
+- Strict validation (`validates!`): 実装済み
+- Association validation (`validates_associated`): 実装済み
+- Conversion helpers (`persisted?` / `to_key` / `to_param` on plain models): 実装済み
+- 証跡:
+  - `app/models/concerns/auditable.rb`
+  - `app/models/current.rb`
+  - `app/models/demo/advanced_profile.rb`
+  - `app/models/demo/normalized_associated_profile.rb`
+  - `app/models/task_import_form.rb`
+  - `app/models/user.rb`
+  - `app/types/normalized_string_type.rb`
+  - `app/services/fault_tolerant_runner.rb`
+  - `app/services/instrumentation_probe.rb`
+  - `app/services/demo/active_support_misc_probe.rb`
+  - `app/services/execution_context_probe.rb`
+  - `app/services/security_token_codec.rb`
+  - `config/initializers/filter_parameter_logging.rb`
+  - `config/initializers/teamhub_notifications.rb`
+  - `test/models/advanced_profile_test.rb`
+  - `test/models/active_support_misc_probe_test.rb`
+  - `test/models/normalized_associated_profile_test.rb`
+  - `test/models/task_import_form_test.rb`
+  - `test/models/active_support_feature_probe_test.rb`
+  - `test/models/security_token_codec_test.rb`
+
+### 3.3 Active Record (SQLite)
+- CRUD / Query interface: 実装済み
+- Associations (`belongs_to/has_many/through`): 実装済み
+- Validations / Callbacks: 実装済み
+- Scopes / Enum / Delegation: 実装済み
+- Transactions / Locking (`transaction`, `with_lock`): 実装済み
+- Composite Primary Keys: 実装済み
+- STI / Polymorphic association: 実装済み
+- Counter cache / Touch: 実装済み
+- Nested attributes (`accepts_nested_attributes_for`): 実装済み
+- Serialization (`store`, `store_accessor`): 実装済み
+- Eager loading (`includes/preload/eager_load`): 実装済み
+- `strict_loading`: 実装済み
+- `readonly`: 実装済み
+- `insert_all` / `upsert_all`: 実装済み
+- `find_each`: 実装済み
+- `find_in_batches` / `in_batches`: 実装済み
+- `joins` / `left_outer_joins`: 実装済み
+- Async query (`load_async`): 実装済み
+- Optimistic locking (`lock_version`): 実装済み
+- Multiple DB / sharding / role切替 (`reading` / `writing`): 実装済み
+- Encryption (`ActiveRecord::Encryption`): 実装済み
+- Signed IDs (`signed_id` / `find_signed!`): 実装済み
+- Migrations / Schema / Seed: 実装済み
+- Transaction callbacks (`after_commit` / `after_rollback`): 実装済み
+- Lifecycle callbacks (`after_find` / `after_touch`): 実装済み
+- Aggregate mapping (`composed_of`): 実装済み
+- Polymorphic delegation (`delegated_type`): 実装済み
+- Per-query tenant constraints (`query_constraints`): 実装済み
+- Column normalization on models (`normalizes`): 実装済み
+- Column ignore/migration compatibility (`ignored_columns`): 実装済み
+- Single-row low-level persistence (`insert` / `upsert`): 実装済み
+- Counter/bulk touch APIs (`increment_counter` / `decrement_counter` / `update_counters` / `touch_all`): 実装済み
+- Query composition helpers (`where.associated` / `where.missing` / `excluding` / `without`): 実装済み
+- Relation rewrite helpers (`reselect` / `rewhere` / `unscope` / `regroup`): 実装済み
+- Query annotation/tuning (`annotate` / `optimizer_hints`): 実装済み
+- Relation builder helpers (`create_with` / `in_order_of` / `none` / `or` / `and` / `invert_where`): 実装済み
+- Sole-record query helpers (`sole` / `find_sole_by`): 実装済み
+- 証跡:
+  - `app/models/*.rb`
+  - `app/models/demo/announcement_headline_probe.rb`
+  - `app/models/demo/delegated_audit_entry.rb`
+  - `app/models/demo/membership_query_scoped.rb`
+  - `app/models/demo/legacy_task_projection.rb`
+  - `app/models/sharded_record.rb`
+  - `app/services/demo/active_record_feature_demo.rb`
+  - `config/database.yml`
+  - `db/migrate/*`
+  - `db/schema.rb`
+  - `config/initializers/active_record_encryption.rb`
+  - `test/models/active_record_feature_demo_test.rb`
+  - `test/models/active_record_callbacks_probe_test.rb`
+  - `test/models/announcement_test.rb`
+  - `test/models/encryption_and_sti_test.rb`
+  - `test/models/audit_log_test.rb`
+  - `test/models/legacy_task_projection_test.rb`
+  - `test/models/membership_query_scoped_test.rb`
+  - `test/models/organization_test.rb`
+  - `test/models/auditable_test.rb`
+  - `test/models/sharding_and_engine_test.rb`
+
+### 3.4 Web Layer (Routing / Middleware / Controller / View / Assets / I18n)
+- RESTful routing resources: 実装済み
+- Nested routes / shallow routes: 実装済み
+- `shallow_prefix` / `shallow_path`: 実装済み
+- Namespaces / scopes / `path_names`: 実装済み
+- Route constraints / `defaults(format)` / glob route: 実装済み
+- Routing `direct` / `resolve` / `redirect`: 実装済み
+- URL helpers (`*_path`, `*_url`): 実装済み
+- Rack app mount: 実装済み
+- Rack middleware stack確認: 実装済み
+- Rack middleware挿入 (`config.middleware.use/insert_before`): 実装済み
+- Params / Strong Parameters: 実装済み
+- Filters (`before_action`, `around_action`): 実装済み
+- Filters (`after_action`): 実装済み
+- Filter ordering/control DSL (`prepend_*` / `append_*` variants): 実装済み
+- Sessions / Cookies / Flash: 実装済み
+- Flash lifecycle (`flash` redirect persistence / `flash.now` render scope): 実装済み
+- Flash carry-over (`flash.keep` across multiple redirects): 実装済み
+- `redirect_to` flash shortcuts (`notice:` / `alert:`): 実装済み
+- `redirect_to` flash shortcuts with `status:`: 実装済み
+- Cookies API (`signed` / `encrypted`): 実装済み
+- Cookies API (`signed` / `encrypted` with `expires:`): 実装済み
+- Cookies API (`permanent`): 実装済み
+- Cookies API (`signed.permanent` / `encrypted.permanent`): 実装済み
+- Cookies API (`delete`): 実装済み
+- Content negotiation (`respond_to`, HTML/JSON): 実装済み
+- Request variants (`request.variant` + variant template): 実装済み
+- Turbo frame-aware controller branching (`turbo_frame_request?` / `turbo_frame_request_id`): 実装済み
+- HEAD request handling with GET metadata parity: 実装済み
+- Redirect / Render / Head: 実装済み
+- `render markdown:`: 実装済み
+- Exception handling (`rescue_from`, 複数例外種別含む): 実装済み
+- HTTP caching (`fresh_when`, `stale?`, explicit etag): 実装済み
+- Streaming (`send_data`, `send_file`, `send_stream`): 実装済み
+- `send_file` の x-sendfile系ヘッダ運用: 実装済み
+- `ActionController::API`: 実装済み
+- `ActionController::Metal`: 実装済み
+- `ActionDispatch::Request` / `Response` 低レベルAPI: 実装済み
+- CSRF protection / per-form token / rotation: 実装済み
+- Layout / Template / Partial: 実装済み
+- Form helpers (`form_with`, `fields_for`): 実装済み
+- `content_for` / `provide` 複数パターン: 実装済み
+- URL / Tag helpers: 実装済み
+- Sanitization / escaping (`sanitize`, `strip_tags`): 実装済み
+- Fragment cache / Russian-doll cache in views: 実装済み
+- Action View output helpers (`capture` / `concat` / `safe_join`): 実装済み
+- Media/asset tag helpers (`picture_tag` / `video_tag` / `audio_tag` / `favicon_link_tag` / `auto_discovery_link_tag` / `javascript_include_tag`): 実装済み
+- Contact/link helpers (`mail_to` / `phone_to`): 実装済み
+- Text helpers (`simple_format` / `truncate` / `excerpt` / `highlight` / `cycle`): 実装済み
+- Number helper variants (`number_to_currency` / `number_to_percentage` / `number_to_phone` / `number_to_rounded` / `number_to_human`): 実装済み
+- Explicit template rendering (`render template:`): 実装済み
+- Explicit collection rendering (`render partial:, collection:` / collection layout variants): 実装済み
+- Builder / JSON / Atom template: 実装済み
+- `debug` helper: 実装済み
+- Propshaft / importmap-rails / JS entrypoint / minimal CSS: 実装済み
+- I18n (`t`, `l`, locale切替, validation message i18n): 実装済み
+- Token auth (`authenticate_or_request_with_http_token`): 実装済み
+- `redirect_back_or_to`: 実装済み
+- Cache control helpers (`expires_in` / `expires_now`): 実装済み
+- `render_to_string`: 実装済み
+- Controller `helper` DSL: 実装済み
+- Controller `helper` DSL (inline block): 実装済み
+- Controller `helper_method`: 実装済み
+- Controller `helper_method` (multiple methods): 実装済み
+- View path mutation (`prepend_view_path` / `append_view_path`): 実装済み
+- URL generation defaults (`default_url_options`): 実装済み
+- URL generation defaults (`default_url_options` controller override): 実装済み
+- Legacy form tag helpers (`form_tag` / `text_field_tag` / `submit_tag`): 実装済み
+- Additional renderers (`render inline:` / `render body:` / `render file:`): 実装済み
+- `ActionController::Renderer` class rendering: 実装済み
+- Form option helpers (`options_for_select` / `collection_select`): 実装済み
+- Record identifier helpers (`dom_class`): 実装済み
+- HTTP Digest auth (`authenticate_or_request_with_http_digest`): 実装済み
+- Browser gating (`allow_browser`): 実装済み
+- Browser gating (`allow_browser` with `only:`): 実装済み
+- Browser gating (`allow_browser` with `except:`): 実装済み
+- `redirect_back`: 実装済み
+- HTTP auth macro (`http_basic_authenticate_with`): 実装済み
+- HTTP auth macro (`http_basic_authenticate_with` with `except:`): 実装済み
+- HTTP auth macro (`http_basic_authenticate_with` with `realm:`): 実装済み
+- `redirect_to` proc / `allow_other_host:`: 実装済み
+- `render json:` with `location:` metadata: 実装済み
+- `ActionDispatch::Request` accessors (`uuid` / `query_parameters` / `path_parameters` / `filtered_parameters` / `authorization` / `request_method_symbol` / `media_type`): 実装済み
+- `ActionDispatch::Response` accessors (`location` / `media_type` / `status`): 実装済み
+- HttpAuthentication direct helpers (`request_http_basic_authentication` / `request_http_token_authentication` / `request_http_digest_authentication`): 実装済み
+- Controller-level CSRF DSL (`protect_from_forgery` / `skip_forgery_protection`): 実装済み
+- `render plain:` with `layout: false`: 実装済み
+- `redirect_to status:` variation: 実装済み
+- Additional view helpers (`button_tag` / `grouped_options_for_select` / `time_ago_in_words`): 実装済み
+- Non-challenge token auth (`authenticate_with_http_token`): 実装済み
+- Non-challenge basic/digest auth (`authenticate_with_http_basic` / `authenticate_with_http_digest`): 実装済み
+- `respond_to` advanced branches (`format.xml` / `format.any`): 実装済み
+- `respond_to` fallback branch (`format.all`): 実装済み
+- `render xml:` explicit rendering: 実装済み
+- `render` explicit `content_type:` override: 実装済み
+- `render partial:` with explicit `formats:`: 実装済み
+- URL helper view predicate (`current_page?`): 実装済み
+- `head` with custom headers: 実装済み
+- `ActionDispatch::Request` predicate/accessor variants (`xhr?` / `format` / verb predicates): 実装済み
+- `ActionDispatch::Request` extended verb predicates (`put?` / `patch?` / `delete?` / `head?`): 実装済み
+- `ActionDispatch::Response` accessor variants (`content_type` / `charset`): 実装済み
+- `ActionDispatch::Request` URL/network accessors (`host` / `protocol` / `fullpath` / `query_string`): 実装済み
+- `ActionDispatch::Request` URL origin accessors (`host_with_port` / `base_url`): 実装済み
+- `ActionDispatch::Request` header/meta accessors (`headers` / `referer` / `user_agent`): 実装済み
+- `ActionDispatch::Response` `content_length`: 実装済み
+- `render html:` with `layout: false` / `status:`: 実装済み
+- `ActionDispatch::Request` raw accessors (`request_method` / `content_length`): 実装済み
+- `ActionDispatch::Request` URL accessors (`path` / `url` / `original_url`): 実装済み
+- `ActionDispatch::Request` path breakdown (`path_info` / `script_name`): 実装済み
+- `ActionDispatch::Response` header accessor (`headers`): 実装済み
+- `ActionDispatch::Request` transport accessors (`port` / `ssl?`): 実装済み
+- `ActionDispatch::Response` low-level header readers (`has_header?` / `get_header`): 実装済み
+- `ActionDispatch::Request` host parsing (`domain` / `subdomain` / `subdomains`): 実装済み
+- `ActionDispatch::Response` header mutation (`set_header` / `delete_header`): 実装済み
+- `ActionDispatch::Request` client locality (`ip` / `local?`): 実装済み
+- `ActionDispatch::Response` status text (`message` / `status_message`): 実装済み
+- `ActionDispatch::Request` request metadata/body (`request_id` / `raw_post`): 実装済み
+- `ActionDispatch::Response` status code accessor (`code`): 実装済み
+- `ActionDispatch::Request` body helpers (`body` / `form_data?` / `server_software`): 実装済み
+- Controller view bridge (`helpers` / `view_context`): 実装済み
+- `ActionDispatch::Request` explicit aliases / diagnostics (`xml_http_request?` / `method` / `inspect`): 実装済み
+- `ActionDispatch::Request` mutation setters (`remote_ip=` / `request_parameters=`): 実装済み
+- Parameter wrapping (`wrap_parameters`): 実装済み
+- `ActionDispatch::Request` parsed pair access (`request_parameters_list`): 実装済み
+- Controller rendering bridge (`render_to_body` / `view_assigns`): 実装済み
+- `ActionDispatch::Request` logger accessor (`logger`): 実装済み
+- Controller execution state (`performed?` / `response_body=`): 実装済み
+- Controller response body reader (`response_body`): 実装済み
+- `ActionDispatch::Request` POST alias reader (`request_parameters`): 実装済み
+- Controller response writers (`status=` / `content_type=`): 実装済み
+- `ActionDispatch::Request` raw stream accessor (`body_stream`): 実装済み
+- Controller header proxy (`headers[]=`): 実装済み
+- Controller header proxy deletion (`headers.delete`): 実装済み
+- Controller response writer (`location=`): 実装済み
+- Controller response readers (`status` / `location` / `content_type` / `media_type`): 実装済み
+- `ActionController::Metal` response readers (`headers` / `status` / `content_type` / `media_type`): 実装済み
+- `ActionController::Metal` response location (`location=` / `location`): 実装済み
+- `ActionController::Metal` header mutation (`headers.delete`): 実装済み
+- `ActionController::Metal` response body reader (`response_body`): 実装済み
+- 証跡:
+  - `config/routes.rb`
+  - `config/routes/demo.rb`
+  - `config/importmap.rb`
+  - `app/controllers/*`
+  - `app/controllers/demo/action_pack_demos_controller.rb`
+  - `app/views/**`
+  - `app/views/action_pack_demos/*`
+  - `app/helpers/action_pack_demo_helper.rb`
+  - `app/javascript/application.js`
+  - `lib/rack_echo_app.rb`
+  - `lib/teamhub/request_marker_middleware.rb`
+  - `lib/teamhub/request_audit_middleware.rb`
+  - `test/integration/public_api_features_test.rb`
+  - `test/integration/http_i18n_and_export_test.rb`
+  - `test/integration/routing_constraints_test.rb`
+  - `test/integration/routing_public_api_test.rb`
+  - `test/controllers/tasks_controller_test.rb`
+
+### 3.5 Hotwire / Realtime (Turbo / Stimulus / Action Cable)
+- Turbo Drive navigation: 実装済み
+- Turbo Frames: 実装済み
+- Turbo Frame advanced options (`src` / `loading` / `target` / `autoscroll` / `recurse`): 実装済み
+- Turbo Streams (`append/prepend/update/replace/remove/before/after`): 実装済み
+- Turbo Stream morphing (`method=\"morph\"` / morph update/replace): 実装済み
+- signed/verified stream name helpers (`signed_stream_name` / `verified_stream_name`): 実装済み
+- Turbo Native support path: 実装済み
+- Turbo page refresh helper/config (`turbo_refreshes_with` / page refresh broadcasts): 実装済み
+- Stimulus controllers: 実装済み
+- Stimulus values / targets / classes API: 実装済み
+- Stimulus action descriptor variants (keyboard filters / `@window` / `@document` / action options / action params): 実装済み
+- Stimulus custom action options (`application.registerActionOption`): 実装済み
+- Stimulus controller context accessors (`this.identifier` / `this.application`): 実装済み
+- Stimulus collection accessors (`this.targets` / `this.classes`) and outlets accessor (`this.outlets`): 実装済み
+- Turbo client navigation API (`Turbo.visit`): 実装済み
+- Turbo session/config API (`Turbo.session` / progress bar delay / form mode customization): 実装済み
+- Turbo cache API (`Turbo.cache.clear`): 実装済み
+- Custom Turbo stream sources (`Turbo.connectStreamSource` / `Turbo.disconnectStreamSource`): 実装済み
+- Custom Turbo Stream actions (`Turbo.StreamActions`): 実装済み
+- Stimulus controller lifecycle callbacks (`initialize` / `disconnect`): 実装済み
+- Stimulus value change callbacks (`*ValueChanged`): 実装済み
+- Stimulus target lifecycle callbacks (`*TargetConnected` / `*TargetDisconnected`): 実装済み
+- Stimulus outlet lifecycle callbacks (`outletConnected` / `outletDisconnected`): 実装済み
+- Stimulus event dispatch helper (`this.dispatch(...)`): 実装済み
+- Stimulus static load hooks (`shouldLoad` / `afterLoad`): 実装済み
+- Controller Turbo Stream response (`format.turbo_stream` / `respond_to` with turbo stream): 実装済み
+- `turbo_frame_tag` helper (explicit helper usage): 実装済み
+- Turbo link/form data helpers (`data-turbo-method` / `data-turbo-confirm` / `data-turbo-frame`): 実装済み
+- Async Turbo Stream broadcasts (`broadcast_*_later_to`): 実装済み
+- Model broadcast macros (`broadcasts` / `broadcasts_to`): 実装済み
+- Turbo Stream refresh action (`turbo_stream.action(:refresh)` / page refresh broadcasts): 実装済み
+- Client-side Turbo stream rendering (`Turbo.renderStreamMessage`): 実装済み
+- Turbo client lifecycle events (`turbo:before-fetch-request` / `turbo:before-fetch-response` / `turbo:submit-end` など): 実装済み
+- Channel定義 / subscription: 実装済み
+- Channel actions (`perform`): 実装済み
+- `subscribed` / `unsubscribed`: 実装済み
+- 明示 `reject` in `subscribed`: 実装済み
+- `defer_subscription_confirmation!`: 実装済み
+- `stream_for` / `stream_from` / `stream_or_reject_for`: 実装済み
+- `stream_from(..., coder:)` + callback: 実装済み
+- `stop_stream_from` / `stop_stream_for` / `stop_all_streams`: 実装済み
+- `periodically`: 実装済み
+- `broadcast_to` / `ActionCable.server.broadcast`: 実装済み
+- Channel low-level API (`perform_action` / `subscribe_to_channel` / `unsubscribe_from_channel` / `unsubscribed?`): 実装済み
+- Channel state readers (`defer_subscription_confirmation?` / `subscription_confirmation_sent?` / `subscription_rejected?`): 実装済み
+- Connection identification (`current_user`): 実装済み
+- Connection `disconnect`: 実装済み
+- Connection handshake (`process`): 実装済み
+- Connection `statistics` / `beat`: 実装済み
+- Connection command routing (`receive` / `dispatch_websocket_message` / `handle_channel_command`): 実装済み
+- Connection async lifecycle (`send_async` / `on_open` / `on_message` / `on_error` / `on_close`): 実装済み
+- Connection `close(reason:, reconnect:)`: 実装済み
+- `ActionCable.server.disconnect(...)`: 実装済み
+- `remote_connections.where(...).disconnect(reconnect: false)`: 実装済み
+- Server runtime API (`call` health path + websocket path / `restart` / `remote_connections.where` / `event_loop` / `worker_pool` / `pubsub` / `connection_identifiers`): 実装済み
+- Local adapterでの開発確認: 実装済み
+- Action Cable private helper internals (`extract_action`, `dispatch_action`, `handle_open`, `handle_close`, internal channel wiring): 内部実装のため個別台帳対象外
+- 外部Cable backend最適化: 対象外
+- 証跡:
+  - `app/channels/application_cable/connection.rb`
+  - `app/channels/notifications_channel.rb`
+  - `app/channels/events_channel.rb`
+  - `app/channels/lifecycle_channel.rb`
+  - `app/controllers/demo/action_pack_demos_controller.rb`
+  - `app/controllers/demo/native_demos_controller.rb`
+  - `app/javascript/channels/**`
+  - `app/javascript/controllers/**`
+  - `app/models/notification.rb`
+  - `app/views/action_pack_demos/turbo_helper_panel.html.erb`
+  - `app/views/dashboard/index.html.erb`
+  - `test/channels/notifications_channel_test.rb`
+  - `test/channels/events_channel_test.rb`
+  - `test/channels/lifecycle_channel_test.rb`
+  - `test/channels/application_cable/connection_test.rb`
+  - `test/models/action_cable_server_api_test.rb`
+  - `test/models/notification_test.rb`
+  - `test/models/turbo_streams_channel_test.rb`
+  - `test/integration/public_api_features_test.rb`
+
+### 3.6 Async Messaging (Active Job / Action Mailer / Action Mailbox)
+- Job定義 / enqueue / perform_later: 実装済み
+- Queue指定 / dynamic `queue_as` / priority / scheduling: 実装済み
+- Retry / discard handling: 実装済み
+- `perform_all_later` / bulk enqueue: 実装済み
+- Active Job Continuations (`ActiveJob::Continuable`, `step`): 実装済み
+- Continuation 失敗分岐: 実装済み
+- recurring jobs: 実装済み
+- Job callbacks (`before_enqueue` / `around_enqueue` / `after_enqueue` / `before_perform` / `around_perform` / `after_perform`): 実装済み
+- `perform_later` enqueue result inspection (`successfully_enqueued?` / `enqueue_error` / block yield): 実装済み
+- Per-job transaction defer control (`self.enqueue_after_transaction_commit = true/false`): 実装済み
+- `set` option variants (`wait:` / explicit `queue:` / explicit `priority:` on enqueue): 実装済み
+- `retry_on` advanced options (`queue:` / `priority:` / `jitter:` / `attempts: :unlimited` / block handler): 実装済み
+- `discard_on` advanced options (`report:` / block handler): 実装済み
+- Direct `retry_job(...)` API on concrete job: 実装済み
+- Job payload customization (`serialize` / `deserialize` override): 実装済み
+- Custom argument serializers (`ActiveJob::Serializers.add_serializers` / `config.active_job.custom_serializers`): 実装済み
+- SolidQueue adapter利用: 実装済み
+- test向けadapter変更は都度確認: 実装運用ルール
+- 外部ジョブアダプタ: 対象外
+- Mailerクラス / templates / multipart: 実装済み
+- Delivery callbacks / interceptors: 実装済み
+- `cc` / `bcc` / `reply_to` / custom headers: 実装済み
+- Preview (`test/mailers/previews`): 実装済み
+- Active Job経由送信 (`deliver_later`): 実装済み
+- mailer parameterized API (`with`): 実装済み
+  - 注記: Rails 8.1.2 標準の `ActionMailer::Parameterized::Mailer` は `.with(...).with(...)` の再チェーンをサポートしないが、TeamHub では prepend patch で chainable `with` を補っている。
+  - `ApplicationMailer.with_merged(*hashes)` も併用でき、複数パラメータセットの合成を共通化している。
+- Mailer action callbacks (`after_action` / `around_action`): 実装済み
+- Mailer deliver callbacks (`around_deliver`): 実装済み
+- Mail defaults (proc default / per-mailer `default_url_options`): 実装済み
+- Mail header API (`headers[]=` / `headers(hash)`): 実装済み
+- Attachments (`attachments[]=` / `attachments.inline[]=`): 実装済み
+- Explicit multipart block (`mail do |format|`): 実装済み
+- Mailer helpers (`default_i18n_subject` / `email_address_with_name`): 実装済み
+- `ActionMailer::MessageDelivery` (`message` / `processed?` / `deliver_now!` / `deliver_later!` / `deliver_all_later` / `deliver_all_later!`): 実装済み
+- Interceptor/Observer registry (`register_*` / `unregister_*`): 実装済み
+- Preview registry API (`ActionMailer::Preview.all/call/find/exists?` / preview interceptors): 実装済み
+- Action Mailbox config accessors (`ingress` / `logger` / `incinerate` / `incinerate_after` / `queues` / `storage_service`): 実装済み
+- InboundEmail routing DSL (string / lambda / regexp / custom matcher / `:all`): 実装済み
+- Mailbox callbacks (`before_processing` / `around_processing` / `after_processing`): 実装済み
+- Mailbox lifecycle (`.receive` / `perform_processing` / `finished_processing?`): 実装済み
+- Mailbox processing (`process` / inbound attachment extraction): 実装済み
+- Mailbox bounce API (`bounced!` / `bounce_with` / `bounce_now_with`): 実装済み
+- Mailbox error handling (`rescue_from`): 実装済み
+- `ActionMailbox::InboundEmail` accessors (`mail` / `source` / `processed?`): 実装済み
+- `ActionMailbox::InboundEmail#instrumentation_payload`: 実装済み
+- Inbound routing API (`route` / `route_later`): 実装済み
+- Inbound incineration API (`incinerate` / `incinerate_later`): 実装済み
+- `ActionMailbox::TestHelper` (`create_*` / `receive_*` helpers): 実装済み
+- Mail extensions (`from_address` / `reply_to_address` / `to_addresses` / `cc_addresses` / `bcc_addresses` / `recipients` / `recipients_addresses`): 実装済み
+- `ActionMailbox::Router` (`add_routes` / `add_route` / `route` / `mailbox_for`): 実装済み
+- `ActionMailbox::Router::Route` (`match?` / `mailbox_class`): 実装済み
+- `ActionMailbox::Relayer` (`relay`, `Result#success?/#failure?/#transient_failure?/#permanent_failure?`): 実装済み
+- `process.action_mailbox` instrumentation: 実装済み
+- Conductor導線 (開発確認): 実装済み
+- 外部配送/受信プロバイダー: 対象外
+- 証跡:
+  - `app/jobs/*.rb`
+  - `app/jobs/demo/advanced_probe_job.rb`
+  - `app/models/demo/job_probe_payload.rb`
+  - `app/serializers/demo/job_probe_payload_serializer.rb`
+  - `config/initializers/active_job_probe_serializer.rb`
+  - `config/queue.yml`
+  - `config/recurring.yml`
+  - `config/environments/*.rb`
+  - `config/initializers/action_mailer_parameterized_chain.rb`
+  - `app/mailers/application_mailer.rb`
+  - `app/mailers/task_mailer.rb`
+  - `app/mailers/advanced_mailer.rb`
+  - `app/mailers/advanced_mailer_observer.rb`
+  - `app/mailers/advanced_mailer_runtime_interceptor.rb`
+  - `app/mailers/advanced_mailer_preview_interceptor.rb`
+  - `app/mailers/task_mailer_interceptor.rb`
+  - `app/views/task_mailer/*`
+  - `test/mailers/advanced_mailer_test.rb`
+  - `test/mailers/task_mailer_test.rb`
+  - `test/mailers/task_mailer_interceptor_test.rb`
+  - `test/models/action_mailer_public_api_test.rb`
+  - `test/mailers/previews/advanced_mailer_preview.rb`
+  - `test/mailers/previews/task_mailer_preview.rb`
+  - `app/mailers/inbound_mailbox_mailer.rb`
+  - `app/mailboxes/application_mailbox.rb`
+  - `app/mailboxes/tasks_mailbox.rb`
+  - `app/mailboxes/workflow_mailbox.rb`
+  - `app/mailboxes/rescue_demo_mailbox.rb`
+  - `app/mailboxes/support_mailbox.rb`
+  - `app/mailboxes/backstop_mailbox.rb`
+  - `test/jobs/advanced_active_job_features_test.rb`
+  - `test/jobs/advanced_probe_job_test.rb`
+  - `test/jobs/continuation_demo_job_test.rb`
+  - `test/jobs/task_notification_job_test.rb`
+  - `test/mailboxes/tasks_mailbox_test.rb`
+  - `test/mailboxes/action_mailbox_feature_test.rb`
+  - `test/models/action_mailbox_public_api_test.rb`
+
+### 3.7 Rich Content (Active Storage / Action Text)
+- Blob / Attachmentモデル連携: 実装済み
+- `has_one_attached` / `has_many_attached`: 実装済み
+- Variant / representation API 複数パターン: 実装済み
+- Previewer (image / video / PDF): 実装済み
+- Direct upload (local): 実装済み
+- direct upload エラー復帰: 実装済み
+- Analyze / metadata: 実装済み
+- purge / purge_later: 実装済み
+- Attachment eager loading scopes (`with_attached_*`): 実装済み
+- Attachment option overrides (`service:` / `dependent:` on `has_*_attached`): 実装済み
+- Preprocessed variants (`preprocessed: true`): 実装済み
+- Blob IO APIs (`download` / `download_chunk` / `open`): 実装済み
+- Blob composition (`ActiveStorage::Blob.compose`): 実装済み
+- Variant tracking / variant records (`config.active_storage.track_variants` / `ActiveStorage::VariantRecord`): 実装済み
+- `has_rich_text`: 実装済み
+- Trixエディタ連携: 実装済み
+- Embedded attachment 連携: 実装済み
+- Action Text attachment gallery: 実装済み
+- Sanitization / Rendering: 実装済み
+- Encrypted rich text (`has_rich_text ..., encrypted: true` / `ActionText::EncryptedRichText`): 実装済み
+- Blank時の RichText レコード抑止 (`has_rich_text ..., store_if_blank: false`): 実装済み
+- Rich text eager loading scopes (`with_rich_text_*` / `with_rich_text_*_and_embeds` / `with_all_rich_text`): 実装済み
+- 非FormBuilder helper (`rich_textarea_tag` / `rich_text_area_tag` / `rich_textarea` / `rich_text_area`): 実装済み
+- Plain text抽出 (`ActionText::Content#to_plain_text` / `ActionText::RichText#to_plain_text`): 実装済み
+- カスタム attachable record (`include ActionText::Attachable` / SGID attachable): 実装済み
+- Attachable解決/抽出 API (`ActionText::Content#attachables` / `ActionText::Attachable.from_node` / `.from_attachable_sgid`): 実装済み
+- カスタム attachable partial override (`to_attachable_partial_path` / `to_trix_content_attachment_partial_path` / `to_missing_attachable_partial_path`): 実装済み
+- Attachable plain text override (`attachable_plain_text_representation`): 実装済み
+- Action Text sanitizer customization (`ActionText::ContentHelper.allowed_tags` / `allowed_attributes` / `scrubber`): 実装済み
+- Mirror serviceや外部ストレージ: 対象外
+- 証跡:
+  - `app/models/task.rb`
+  - `app/models/announcement.rb`
+  - `app/models/demo/storage_option_user_probe.rb`
+  - `app/models/demo/rich_content_announcement_probe.rb`
+  - `app/models/demo/rich_attachable_note.rb`
+  - `app/models/user.rb`
+  - `app/views/tasks/_form.html.erb`
+  - `app/views/tasks/_task.html.erb`
+  - `app/views/active_storage/blobs/_blob.html.erb`
+  - `app/views/demo/rich_attachable_notes/_rich_attachable_note.html.erb`
+  - `app/javascript/controllers/direct_upload_controller.js`
+  - `app/javascript/application.js`
+  - `config/initializers/action_text_sanitizer.rb`
+  - `test/integration/security_and_storage_test.rb`
+  - `test/models/active_storage_and_action_text_feature_test.rb`
+  - `test/models/user_test.rb`
+  - `test/models/active_storage_and_action_text_feature_test.rb`
+
+### 3.8 Security / Authentication
+- `has_secure_password` reset token API (`generates_token_for` 系): 実装済み
+- CSRF tokens / per-form token / rotation: 実装済み
+- CSP headers: 実装済み
+- Host Authorization allowlist: 実装済み
+- Signed / Encrypted cookies: 実装済み
+- Parameter filtering in logs: 実装済み
+- XSS / HTML escaping: 実装済み
+- SQL Injection対策 (bind params): 実装済み
+- Authentication (`has_secure_password`): 実装済み
+- Authorization (アプリ実装): 実装済み
+- Rate limiting / throttling (Rails標準 middlewareベース): 実装済み
+- HTTP Basic認証: 実装済み
+- 証跡:
+  - `config/initializers/content_security_policy.rb`
+  - `config/initializers/security_headers.rb`
+  - `config/initializers/filter_parameter_logging.rb`
+  - `app/controllers/demo/security_demos_controller.rb`
+  - `app/controllers/admin/diagnostics_controller.rb`
+  - `app/models/user.rb`
+  - `test/integration/security_and_storage_test.rb`
+  - `test/integration/security_features_test.rb`
+  - `test/integration/middleware_task_test.rb`
+  - `test/models/host_authorization_test.rb`
+  - `test/models/user_test.rb`
+
+### 3.9 Observability / Caching / Operations / Testing
+- Low-level caching (`Rails.cache.fetch`): 実装済み
+- Cache key/versioning: 実装済み
+- HTTP conditional GET: 実装済み
+- `Rails.error.report` / `Rails.error.handle` / `Rails.error.record`: 実装済み
+- `ActiveSupport::Notifications` と `Rails.event` の相関検証: 実装済み
+- Structured Event Reporting (`Rails.event.notify`): 実装済み
+- tagged logging (`config.log_tags`, `Rails.logger.tagged`): 実装済み
+- `debug` helper の console/runner 利用: 実装済み
+- `bin/setup` 相当手順: 実装済み
+- `config/ci.rb` / `bin/ci`: 実装済み
+- Seedsでデモデータ投入: 実装済み
+- Health check endpoint: 実装済み
+- Testing (Minitest: model / integration / controller / system / job / mailer / channel / mailbox): 実装済み
+- Fixture / Factory代替データ戦略: 実装済み
+- 証跡:
+  - `app/services/dashboard_stats.rb`
+  - `app/services/observability_probe.rb`
+  - `app/services/debug_helper_probe.rb`
+  - `app/controllers/application_controller.rb`
+  - `config/application.rb`
+  - `config/ci.rb`
+  - `bin/ci`
+  - `db/seeds.rb`
+  - `docs/RUNBOOK.md`
+  - `test/models/dashboard_stats_test.rb`
+  - `test/models/observability_probe_test.rb`
+  - `test/models/debug_helper_probe_test.rb`
+  - `test/controllers/tasks_controller_test.rb`
+  - `test/jobs/task_notification_job_test.rb`
+  - `test/**/*`
+
+## 4. 検証導線
+- A: UI導線 (画面操作で確認)
+- B: テスト導線 (Minitest)
+- C: コマンド導線 (`rails runner` / `rake`)
+
+代表コマンド:
+```bash
+mise exec ruby@4.0.0 -- bin/rails test
+mise exec ruby@4.0.0 -- bin/rails teamhub:warm_dashboard_cache
+mise exec ruby@4.0.0 -- bin/rails teamhub:queue_stats
+mise exec ruby@4.0.0 -- bin/rails teamhub:middleware
+```
+
+## 5. 明示的対象外 (再掲)
+- Active Storage の外部サービス連携 (S3/GCS/Azure)
+- Active Job の外部アダプタ (Sidekiq/Resque等)
+- Action Mailer の外部配送サービス (SendGrid等)
+- Action Mailbox の外部受信プロバイダー設定
+- Action Cable の外部バックエンド最適化構成
+
+## 6. 残件 / 制約
+- 主要機能レベルの残件なし
+- 補足: Rails 8.1.2 標準では `ActionMailer::Parameterized::Mailer` の `.with(...).with(...)` は未対応だが、TeamHub では `config/initializers/action_mailer_parameterized_chain.rb` の prepend patch で補完済み。

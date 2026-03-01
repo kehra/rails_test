@@ -1,0 +1,6 @@
+<% cache notification do %>
+  <div id="<%= dom_id(notification) %>">
+    <small><%= l(notification.created_at, format: :short) %></small>
+    <p><%= notification.message %></p>
+  </div>
+<% end %>

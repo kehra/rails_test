@@ -1,0 +1,7 @@
+<% content_for :title, "Debug Dump" %>
+<% content_for :head do %>
+  <meta name="teamhub-docs-debug" content="true">
+<% end %>
+
+<h1>Debug Dump</h1>
+<%= debug(@payload) %>

@@ -1,0 +1,9 @@
+ja:
+  hello: "こんにちは"
+  time:
+    formats:
+      short: "%Y-%m-%d %H:%M"
+  ui:
+    dashboard: "TeamHub ダッシュボード"
+    locale: "言語"
+    notifications: "通知"

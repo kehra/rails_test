@@ -1,0 +1,56 @@
+<h1>Action Pack Helper Panel</h1>
+
+<%= action_pack_badge("helper") %>
+<div class="<%= dom_class(Project.new) %>">dom-class</div>
+
+<div id="action-pack-captured">
+  <%= capture do %>
+    captured-helper
+  <% end %>
+</div>
+
+<div id="action-pack-concat-wrapper">
+  <%= capture do %>
+    <% concat content_tag(:p, "concat-helper", id: "action-pack-concat") %>
+  <% end %>
+</div>
+<div id="action-pack-safe-join"><%= safe_join([content_tag(:span, "safe"), content_tag(:span, "join")], " / ".html_safe) %></div>
+
+<%= form_tag action_pack_helper_panel_path, method: :get do %>
+  <%= text_field_tag :query, params[:query], id: "action_pack_query" %>
+  <%= select_tag :status, options_for_select([["Active", "active"], ["Archived", "archived"]], params[:status]) %>
+  <%= select_tag :stage, grouped_options_for_select({ "Open" => [["Todo", "todo"], ["Doing", "doing"]], "Closed" => [["Done", "done"]] }, params[:stage]) %>
+  <%= button_tag "Run", id: "action_pack_button_tag" %>
+  <%= submit_tag "Filter" %>
+<% end %>
+
+<%= form_with url: action_pack_helper_panel_path, method: :get, scope: :filters do |form| %>
+  <%= form.collection_select :project_id, @projects, :id, :name, include_blank: "Any project" %>
+<% end %>
+
+<p id="action-pack-query-value"><%= params[:query].presence || "none" %></p>
+<p id="action-pack-time-ago"><%= time_ago_in_words(1.hour.ago) %></p>
+<p id="action-pack-current-page"><%= current_page?(request.fullpath) %></p>
+<p id="action-pack-current-user"><%= current_user.email %></p>
+<p id="action-pack-signed-in"><%= signed_in? %></p>
+<p id="action-pack-inline-helper"><%= inline_helper_label("helper") %></p>
+<p id="action-pack-default-url-path"><%= docs_preview_path %></p>
+<p id="action-pack-default-url-url"><%= docs_preview_url %></p>
+<p id="action-pack-simple-format"><%= simple_format("Alpha\n\nBeta") %></p>
+<p id="action-pack-truncate"><%= truncate("abcdefghijklmnop", length: 8) %></p>
+<p id="action-pack-excerpt"><%= excerpt("TeamHub helper excerpt demo", "helper", radius: 5) %></p>
+<p id="action-pack-highlight"><%= highlight("TeamHub helper highlight", "helper") %></p>
+<p id="action-pack-cycle"><%= cycle("odd", "even") %></p>
+<p id="action-pack-number-currency"><%= number_to_currency(12.34) %></p>
+<p id="action-pack-number-percentage"><%= number_to_percentage(12.3, precision: 1) %></p>
+<p id="action-pack-number-phone"><%= number_to_phone(5551234567) %></p>
+<p id="action-pack-number-rounded"><%= ActiveSupport::NumberHelper.number_to_rounded(12.3456, precision: 2) %></p>
+<p id="action-pack-number-human"><%= number_to_human(12_300) %></p>
+<p id="action-pack-mail-to"><%= mail_to("support@example.test") %></p>
+<p id="action-pack-phone-to"><%= phone_to("5551234567") %></p>
+<p id="action-pack-picture-tag"><%= picture_tag("/icon.png", alt: "Icon") %></p>
+<p id="action-pack-video-tag"><%= video_tag("/sample.mp4", controls: true) %></p>
+<p id="action-pack-audio-tag"><%= audio_tag("/sample.mp3", controls: true) %></p>
+<p id="action-pack-favicon-tag"><%= favicon_link_tag("/icon.png") %></p>
+<p id="action-pack-feed-tag"><%= auto_discovery_link_tag(:atom, docs_feed_url) %></p>
+<p id="action-pack-javascript-include-tag"><%= javascript_include_tag("application", nonce: true) %></p>

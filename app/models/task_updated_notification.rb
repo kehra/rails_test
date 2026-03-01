@@ -1,0 +1,2 @@
+class TaskUpdatedNotification < Notification
+end

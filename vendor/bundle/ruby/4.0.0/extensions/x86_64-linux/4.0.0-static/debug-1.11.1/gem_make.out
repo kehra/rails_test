@@ -1,0 +1,19 @@
+current directory: /home/kehra/ghq/github.com/kehra/rails_test/vendor/bundle/ruby/4.0.0/gems/debug-1.11.1/ext/debug
+/home/kehra/.local/share/mise/installs/ruby/4.0.0/bin/ruby extconf.rb
+creating Makefile
+
+current directory: /home/kehra/ghq/github.com/kehra/rails_test/vendor/bundle/ruby/4.0.0/gems/debug-1.11.1/ext/debug
+make -j33 DESTDIR\= sitearchdir\=./.gem.20260227-6500-ntt49j sitelibdir\=./.gem.20260227-6500-ntt49j clean
+
+current directory: /home/kehra/ghq/github.com/kehra/rails_test/vendor/bundle/ruby/4.0.0/gems/debug-1.11.1/ext/debug
+make -j33 DESTDIR\= sitearchdir\=./.gem.20260227-6500-ntt49j sitelibdir\=./.gem.20260227-6500-ntt49j
+compiling debug.c
+compiling iseq_collector.c
+linking shared-object debug/debug.so
+
+current directory: /home/kehra/ghq/github.com/kehra/rails_test/vendor/bundle/ruby/4.0.0/gems/debug-1.11.1/ext/debug
+make -j33 DESTDIR\= sitearchdir\=./.gem.20260227-6500-ntt49j sitelibdir\=./.gem.20260227-6500-ntt49j install
+/usr/bin/install -c -m 0755 debug.so ./.gem.20260227-6500-ntt49j/debug
+
+current directory: /home/kehra/ghq/github.com/kehra/rails_test/vendor/bundle/ruby/4.0.0/gems/debug-1.11.1/ext/debug
+make DESTDIR\= sitearchdir\=./.gem.20260227-6500-ntt49j sitelibdir\=./.gem.20260227-6500-ntt49j clean

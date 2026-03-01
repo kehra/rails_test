@@ -1,0 +1,6 @@
+<%= @message %>
+
+Task: <%= @task&.title || "(unknown)" %>
+Project: <%= @project&.name || "(unknown)" %>
+
+Open in TeamHub: <%= task_url(@task) if @task %>
