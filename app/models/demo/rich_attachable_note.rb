@@ -10,8 +10,8 @@ class Demo::RichAttachableNote < ApplicationRecord
     "demo/rich_attachable_notes/rich_attachable_note"
   end
 
-  def to_trix_content_attachment_partial_path
-    "demo/rich_attachable_notes/trix_rich_attachable_note"
+  def to_editor_content_attachment_partial_path
+    "demo/rich_attachable_notes/rich_attachable_note"
   end
 
   def to_missing_attachable_partial_path

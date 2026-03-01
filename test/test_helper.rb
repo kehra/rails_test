@@ -3,7 +3,7 @@ require_relative "../config/environment"
 require "rails/test_help"
 
 module SQLiteParallelTestDatabaseFix
-  def schema_up_to_date?(configuration, *args)
+  def schema_up_to_date?(configuration, *args, **kwargs)
     super
   rescue ActiveRecord::StatementInvalid => error
     raise unless missing_internal_metadata_table?(error)

@@ -52,10 +52,17 @@
 6. 成功時の扱い。
    - `Gemfile.lock` に lock された Rails の revision を特定する。
    - 更新前の lock 状態と、新しい upstream revision を比較する。
+   - 「このアプリで壊れた箇所だけ」で判断せず、必ずソース差分を基準に確認する。
+   - 初回で Git tag 比較が難しい場合でも、少なくともローカルに残っているリリース版 gem ソースと、現在の `main` ソースを直接比較する。
+   - 比較は以下の順で行う。
+     - 対象コンポーネントの release notes / CHANGELOG
+     - deprecation / rename / option / signature 変更の grep
+     - 実際の公開 API 実装コードの差分確認
    - このアプリに関係する公開機能の追加・変更を確認する。
    - 必要な反映先は以下。
      - `docs/RAILS_FULL_FEATURES.md`
      - app 側の demo / probe コード（本当に意味のある新機能のみ）
+   - `docs/RAILS_FULL_FEATURES.md` の「環境固定」欄にある Rails バージョン表記も、現在の lock 状態に合わせて更新する。
    - まずドキュメント更新を優先し、実装追加は必要性が高い差分だけに絞る。
 
 ## 成功時に確認すべき内容
@@ -66,6 +73,7 @@
   - 初回は、リリース版 8.1.2 相当から現在の `main` までの差分を意識する。
   - 2回目以降は、前回 lock されていた `main` revision から現在の `main` までの差分を確認する。
   - このアプリが使っている framework API に関係する変更を優先して確認する。
+  - 公開 API / deprecation / option 名 / シグネチャ変更は、実際のソース差分で裏付ける。
   - 特に、このプロジェクトが明示的に追っている領域を優先する。
     - Railties
     - Active Support

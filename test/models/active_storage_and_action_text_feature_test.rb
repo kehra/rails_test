@@ -1,7 +1,7 @@
 require "test_helper"
 
 class ActiveStorageAndActionTextFeatureTest < ActiveSupport::TestCase
-  test "attachment scopes options preprocessed variants and blob io APIs work" do
+  test "attachment scopes options processed variants and blob io APIs work" do
     user = Demo::StorageOptionUserProbe.find(users(:one).id)
     png = Base64.decode64("iVBORw0KGgoAAAANSUhEUgAAAAEAAAABCAQAAAC1HAwCAAAAC0lEQVR4nGNgYAAAAAMAASsJTYQAAAAASUVORK5CYII=")
     user.service_avatar.attach(io: StringIO.new(png), filename: "service.png", content_type: "image/png")
@@ -19,7 +19,7 @@ class ActiveStorageAndActionTextFeatureTest < ActiveSupport::TestCase
     assert loaded.association(:service_documents_attachments).loaded?
     assert_equal :local, reflection.options[:service_name]
     assert_equal :purge_later, reflection.options[:dependent]
-    assert_equal true, reflection.named_variants[:thumb].preprocessed
+    assert_equal :later, reflection.named_variants[:thumb].process(user)
     blob_one = ActiveStorage::Blob.create_and_upload!(io: StringIO.new("alpha"), filename: "alpha-io.txt", content_type: "text/plain")
     blob_two = ActiveStorage::Blob.create_and_upload!(io: StringIO.new("beta"), filename: "beta-io.txt", content_type: "text/plain")
 
@@ -142,7 +142,7 @@ class ActiveStorageAndActionTextFeatureTest < ActiveSupport::TestCase
     assert_includes content.attachables, attachable
     assert_includes content.to_plain_text, "[Demo::RichAttachableNote ##{attachable.id}]"
     assert_equal "demo/rich_attachable_notes/rich_attachable_note", attachable.to_attachable_partial_path
-    assert_equal "demo/rich_attachable_notes/trix_rich_attachable_note", attachable.to_trix_content_attachment_partial_path
+    assert_equal "demo/rich_attachable_notes/rich_attachable_note", attachable.to_editor_content_attachment_partial_path
     assert_equal "demo/rich_attachable_notes/missing_rich_attachable_note", attachable.to_missing_attachable_partial_path
 
     rendered = ApplicationController.render(

@@ -23,7 +23,7 @@
 
 ## 2. 環境固定
 - Ruby: `4.0.0` (mise)
-- Rails: `8.1.2`
+- Rails: `main` (lock: `8.2.0.alpha`, revision: `b0581ee`)
 - DB: `SQLite`
 - Active Job: `SolidQueue`
 - Active Storage: `Local`
@@ -544,7 +544,7 @@
 - purge / purge_later: 実装済み
 - Attachment eager loading scopes (`with_attached_*`): 実装済み
 - Attachment option overrides (`service:` / `dependent:` on `has_*_attached`): 実装済み
-- Preprocessed variants (`preprocessed: true`): 実装済み
+- Variant processing mode (`process: :later` / `process: :lazily`): 実装済み
 - Blob IO APIs (`download` / `download_chunk` / `open`): 実装済み
 - Blob composition (`ActiveStorage::Blob.compose`): 実装済み
 - Variant tracking / variant records (`config.active_storage.track_variants` / `ActiveStorage::VariantRecord`): 実装済み
@@ -560,7 +560,7 @@
 - Plain text抽出 (`ActionText::Content#to_plain_text` / `ActionText::RichText#to_plain_text`): 実装済み
 - カスタム attachable record (`include ActionText::Attachable` / SGID attachable): 実装済み
 - Attachable解決/抽出 API (`ActionText::Content#attachables` / `ActionText::Attachable.from_node` / `.from_attachable_sgid`): 実装済み
-- カスタム attachable partial override (`to_attachable_partial_path` / `to_trix_content_attachment_partial_path` / `to_missing_attachable_partial_path`): 実装済み
+- カスタム attachable partial override (`to_attachable_partial_path` / `to_editor_content_attachment_partial_path` / `to_missing_attachable_partial_path`): 実装済み
 - Attachable plain text override (`attachable_plain_text_representation`): 実装済み
 - Action Text sanitizer customization (`ActionText::ContentHelper.allowed_tags` / `allowed_attributes` / `scrubber`): 実装済み
 - Mirror serviceや外部ストレージ: 対象外

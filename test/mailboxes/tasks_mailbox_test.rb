@@ -7,7 +7,7 @@ class TasksMailboxTest < ActiveSupport::TestCase
     assert_includes source, "routing \"help@example.test\" => :support"
     assert_includes source, "routing ->(inbound_email)"
     assert_includes source, "routing /^tasks(\\+\\d+)?@/i => :tasks"
-    assert_includes source, "routing :all => :backstop"
+    assert_includes source, "routing all: :backstop"
   end
 
   test "tasks mailbox contains bounce branch and attachment extraction logic" do
